@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns:os="http://www.mulesoft.org/schema/mule/os"
-	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/websocket http://www.mulesoft.org/schema/mule/websocket/current/mule-websocket.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
-http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd">
 	<websocket:config name="LocalServer" doc:name="WebSockets Config" doc:id="75a0a2aa-f746-4f15-9014-1b6b8449cd86" >
 		<websocket:connection >
 			<websocket:server-settings listenerBasePath="/ws" listenerConfig="HTTP_Listener_config1" idleSocketTimeout="1" idleSocketTimeoutUnit="HOURS" />
@@ -54,22 +55,23 @@ output application/json
 	</flow>
 	<flow name="BroadcastWebSocket" doc:id="2a9bf7c6-078f-4355-aaeb-544bfe91d65f" >
 		<websocket:outbound-listener doc:name="On New Outbound Message" doc:id="ca2f4417-eceb-42f3-ae94-663cf2c2cd1b" config-ref="LocalClient" path="/binance" />
-		<ee:transform doc:name="Transform Message" doc:id="7a255d57-2743-4051-b83c-aa5a74f03f1f" >
+		<logger level="INFO" doc:name="LogWSPayload" doc:id="b93c3420-4608-4f9e-9be3-313314eeebb9" message="#[payload]" />
+		<set-variable value='#[payload]' doc:name="Set Variable" doc:id="0a3603c9-c1c7-477e-b034-9f6723a21195" variableName="message" mimeType="text/plain"/>
+		<ee:transform doc:name="Transform Message" doc:id="87e9c82d-044b-4cf7-90c6-ad815f604002" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/java
 ---
-{
- Ink_Percentage__c: 99.99,
- Printer_Model__c: "application_network",
- Serial_Number__c: "mule_ipo_2017"
-}]]></ee:set-payload>
+[{
+	"payload": vars.message,
+	"userIds": []
+}]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="LogWSPayload" doc:id="b93c3420-4608-4f9e-9be3-313314eeebb9" message="#[payload]" />
-		<salesforce:publish-platform-event-message doc:name="Publish platform event message" doc:id="ccbd11c3-a56b-40a8-8127-4528623de396" config-ref="Salesforce_Config"/>
-		<logger level="INFO" doc:name="Event Copy To Platform " doc:id="ec1ceb46-9f8c-4d81-b897-37b4a97bcb95" />
+		<salesforce:push-generic-event doc:name="Push generic event" doc:id="b0784b7c-7f38-4d1c-916c-da99ec6eb21c" config-ref="Salesforce_Config" channelId="0M62x000000TXPw">
+		</salesforce:push-generic-event>
 		<websocket:broadcast doc:name="Publish Data" doc:id="c5e99c2e-ba82-4f55-bef5-d8c50963894f" config-ref="LocalServer" path="/ws/wsdata" socketType="INBOUND" />
+		<logger level="INFO" doc:name="Event Copy To Platform " doc:id="ec1ceb46-9f8c-4d81-b897-37b4a97bcb95" message="#[payload]"/>
 	</flow>
 	
 </mule>
