@@ -1,0 +1,1 @@
+"{"exchange":"binance","base":"ethereum-classic","quote":"tether","direction":"sell","price":5.2,"volume":57.89,"timestamp":1601572509729,"priceUsd":5.218213337324433}"

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/websocket http://www.mulesoft.org/schema/mule/websocket/current/mule-websocket.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<websocket:config name="LocalServer" doc:name="WebSockets Config" doc:id="75a0a2aa-f746-4f15-9014-1b6b8449cd86" >
+		<websocket:connection >
+			<websocket:server-settings listenerBasePath="/ws" listenerConfig="HTTP_Listener_config1" idleSocketTimeout="1" idleSocketTimeoutUnit="HOURS" />
+
+		</websocket:connection>
+	</websocket:config>
+	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="dc77d4f3-f24e-4b11-9eaa-acfc24b8e109" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="e315b2e8-9ad1-41c5-a2c1-390dd7b77847" />
+	<websocket:config name="LocalClient" doc:name="WebSockets Config" doc:id="e7a08026-058e-41d1-9d57-4c65dbdf9046" >
+		<websocket:connection >
+			<websocket:client-settings host="ws.coincap.io" basePath="/trades" protocol="WSS" port="443">
+				<websocket:default-query-params >
+				</websocket:default-query-params>
+			</websocket:client-settings>
+		</websocket:connection>
+	</websocket:config>
+	<salesforce:sfdc-config name="rezang-la" doc:name="Salesforce Config" doc:id="b881faeb-c28c-4285-a129-c976cb7d8129" >
+		<salesforce:basic-connection username="vkaul@rezang-la.demo" password="Salesforce1" securityToken="fvQIyYBMEY7lzEz8wZEBDHWz" />
+	</salesforce:sfdc-config>
+	<flow name="WebSocketListener" doc:id="c3f77be4-9c11-4f0f-987d-4a4922cd872d">
+		<websocket:inbound-listener doc:name="On New Inbound Message" doc:id="224dda51-7699-43c2-abd4-67501f13ef00" path="/wsdata" config-ref="LocalServer"/>
+		<logger level="INFO" doc:name="Streaming Data" doc:id="4866ceaf-9925-4c9e-949e-291151e16269" message="---- streaming data ----"/>
+		<flow-ref doc:name="CallWebSocketSource" doc:id="2ba7fd69-99b7-4c1e-ba47-408345394f58" name="ExternalWebSocket" />
+	</flow>
+	<flow name="ExternalWebSocket" doc:id="fd2fa6d0-636d-4fb1-80dd-d246cc9092e5" >
+		<websocket:open-outbound-socket doc:name="Open outbound socket" doc:id="89f6cd25-a383-413d-9c26-c0ff71296c32" config-ref="LocalClient" path="/binance">
+			<reconnect />
+		</websocket:open-outbound-socket>
+		
+		<!-- 
+		<websocket:send doc:name="Send" doc:id="dbd658ba-20bd-4984-9dec-aacf75ef86fa" config-ref="WebSockets_Config_client" socketId="#[vars.socket_id]">
+			<websocket:content ><![CDATA[#[%dw 2.0
+output application/json
+-&#45;&#45;
+{
+	match_id: "12345",
+	subscription:  true	
+}]]]></websocket:content>
+		</websocket:send>
+		 -->
+		<logger level="INFO" doc:name="Logger" doc:id="98e588a4-c0fb-451c-91ad-6507420eb655" message="#[payload]"/>
+	</flow>
+	<flow name="BroadcastWebSocket" doc:id="2a9bf7c6-078f-4355-aaeb-544bfe91d65f" >
+		<websocket:outbound-listener doc:name="On New Outbound Message" doc:id="ca2f4417-eceb-42f3-ae94-663cf2c2cd1b" config-ref="LocalClient" path="/binance" />
+		<logger level="INFO" doc:name="LogWSPayload" doc:id="b93c3420-4608-4f9e-9be3-313314eeebb9" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="8f55ab52-6152-4afd-abcd-1bbbd502e724" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+ ---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:push-generic-event doc:name="Push generic event" doc:id="a2c075e6-2611-4e24-81f3-f84437f5b392" config-ref="rezang-la" channelId="/u/Binance" >
+		</salesforce:push-generic-event>
+		<websocket:broadcast doc:name="Publish Data" doc:id="c5e99c2e-ba82-4f55-bef5-d8c50963894f" config-ref="LocalServer" path="/ws/wsdata" socketType="INBOUND" />
+	</flow>
+	
+</mule>

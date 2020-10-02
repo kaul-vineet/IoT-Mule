@@ -1,0 +1,1 @@
+{"exchange":"binance","base":"zilliqa","quote":"tether","direction":"buy","price":0.01948,"volume":1136,"timestamp":1601568582871,"priceUsd":0.0195292866705418}

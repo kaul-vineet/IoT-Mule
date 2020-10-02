@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="Binance" format="json">
+      <types:shape format="weave" example="examples/webs-5.json"><![CDATA[%dw 2.0
+
+type Binance = {|
+  exchange: String, 
+  base: String, 
+  quote: String, 
+  direction: String, 
+  price: Number {"typeId": "double"}, 
+  volume: Number {"typeId": "double"}, 
+  timestamp: Number {"typeId": "double"}, 
+  priceUsd: Number {"typeId": "double"}
+|} {"example": "{\\\"exchange\\\":\\\"binance\\\",\\\"base\\\":\\\"zilliqa\\\",\\\"quote\\\":\\\"tether\\\",\\\"direction\\\":\\\"buy\\\",\\\"price\\\":0.01949,\\\"volume\\\":444.1,\\\"timestamp\\\":1601568582871,\\\"priceUsd\\\":0.0195393119717074}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="payload" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#8f55ab52-6152-4afd-abcd-1bbbd502e724">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="payload"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="payload"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
