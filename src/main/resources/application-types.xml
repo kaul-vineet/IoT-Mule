@@ -22,18 +22,4 @@ type Binance = {|
 type: string]]></types:shape>
     </types:type>
   </types:catalog>
-  <types:enrichment select="#8f55ab52-6152-4afd-abcd-1bbbd502e724">
-    <types:processor-declaration>
-      <types:input-event>
-        <types:message>
-          <types:payload type="payload"/>
-        </types:message>
-      </types:input-event>
-      <types:output-event>
-        <types:message>
-          <types:payload type="payload"/>
-        </types:message>
-      </types:output-event>
-    </types:processor-declaration>
-  </types:enrichment>
 </types:mule>

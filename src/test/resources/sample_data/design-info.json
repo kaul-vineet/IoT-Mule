@@ -6,9 +6,7 @@
     "9dbb199e-0186-4a20-a613-ce2c3849af00": {
       "payload": "sample_data/defaultstringtype.dwl"
     },
-    "8f55ab52-6152-4afd-abcd-1bbbd502e724": {
-      "payload": "sample_data/unknown.dwl"
-    },
+    "8f55ab52-6152-4afd-abcd-1bbbd502e724": {},
     "a2c075e6-2611-4e24-81f3-f84437f5b392": {
       "payload": "sample_data/defaultstringtype_2.dwl"
     }

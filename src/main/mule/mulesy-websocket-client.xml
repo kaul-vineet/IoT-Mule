@@ -26,7 +26,7 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 			</websocket:client-settings>
 		</websocket:connection>
 	</websocket:config>
-	<salesforce:sfdc-config name="rezang-la" doc:name="Salesforce Config" doc:id="b881faeb-c28c-4285-a129-c976cb7d8129" >
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="fc297ef0-d429-4063-874b-a76f271458e7" >
 		<salesforce:basic-connection username="vkaul@rezang-la.demo" password="Salesforce1" securityToken="fvQIyYBMEY7lzEz8wZEBDHWz" />
 	</salesforce:sfdc-config>
 	<flow name="WebSocketListener" doc:id="c3f77be4-9c11-4f0f-987d-4a4922cd872d">
@@ -54,17 +54,21 @@ output application/json
 	</flow>
 	<flow name="BroadcastWebSocket" doc:id="2a9bf7c6-078f-4355-aaeb-544bfe91d65f" >
 		<websocket:outbound-listener doc:name="On New Outbound Message" doc:id="ca2f4417-eceb-42f3-ae94-663cf2c2cd1b" config-ref="LocalClient" path="/binance" />
-		<logger level="INFO" doc:name="LogWSPayload" doc:id="b93c3420-4608-4f9e-9be3-313314eeebb9" message="#[payload]"/>
-		<ee:transform doc:name="Transform Message" doc:id="8f55ab52-6152-4afd-abcd-1bbbd502e724" >
+		<ee:transform doc:name="Transform Message" doc:id="7a255d57-2743-4051-b83c-aa5a74f03f1f" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/java
- ---
-payload]]></ee:set-payload>
+---
+{
+ Ink_Percentage__c: 99.99,
+ Printer_Model__c: "application_network",
+ Serial_Number__c: "mule_ipo_2017"
+}]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<salesforce:push-generic-event doc:name="Push generic event" doc:id="a2c075e6-2611-4e24-81f3-f84437f5b392" config-ref="rezang-la" channelId="/u/Binance" >
-		</salesforce:push-generic-event>
+		<logger level="INFO" doc:name="LogWSPayload" doc:id="b93c3420-4608-4f9e-9be3-313314eeebb9" message="#[payload]" />
+		<salesforce:publish-platform-event-message doc:name="Publish platform event message" doc:id="ccbd11c3-a56b-40a8-8127-4528623de396" config-ref="Salesforce_Config"/>
+		<logger level="INFO" doc:name="Event Copy To Platform " doc:id="ec1ceb46-9f8c-4d81-b897-37b4a97bcb95" />
 		<websocket:broadcast doc:name="Publish Data" doc:id="c5e99c2e-ba82-4f55-bef5-d8c50963894f" config-ref="LocalServer" path="/ws/wsdata" socketType="INBOUND" />
 	</flow>
 	
