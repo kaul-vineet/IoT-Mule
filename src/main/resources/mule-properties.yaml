@@ -1,0 +1,4 @@
+kafka:  
+ssl.endpoint.identification.algorithm: " "  
+topic: “smokyhill-44329.Binance”  
+groupId: “smokyhill-44329.BinanceGroup”

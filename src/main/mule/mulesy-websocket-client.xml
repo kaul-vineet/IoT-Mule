@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
-	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/websocket http://www.mulesoft.org/schema/mule/websocket/current/mule-websocket.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
-http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd">
+http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
 	<websocket:config name="LocalServer" doc:name="WebSockets Config" doc:id="75a0a2aa-f746-4f15-9014-1b6b8449cd86" >
 		<websocket:connection >
 			<websocket:server-settings listenerBasePath="/ws" listenerConfig="HTTP_Listener_config1" idleSocketTimeout="1" idleSocketTimeoutUnit="HOURS" />
@@ -16,7 +19,7 @@ http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/ka
 		</websocket:connection>
 	</websocket:config>
 	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="dc77d4f3-f24e-4b11-9eaa-acfc24b8e109" >
-		<http:listener-connection host="0.0.0.0" port="8082" />
+		<http:listener-connection host="0.0.0.0" port="80" />
 	</http:listener-config>
 	<os:object-store name="Object_store" doc:name="Object store" doc:id="e315b2e8-9ad1-41c5-a2c1-390dd7b77847" />
 	<websocket:config name="LocalClient" doc:name="WebSockets Config" doc:id="e7a08026-058e-41d1-9d57-4c65dbdf9046" >
@@ -28,7 +31,7 @@ http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/ka
 		</websocket:connection>
 	</websocket:config>
 	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="fc297ef0-d429-4063-874b-a76f271458e7" >
-		<salesforce:basic-connection username="vkaul@rezang-la.demo" password="Salesforce1" securityToken="fvQIyYBMEY7lzEz8wZEBDHWz" />
+		<salesforce:basic-connection username="asharma@tpmapp.demo" password="demo@1908" securityToken="mVbe5uloB7A6MqmP1YAi5nrN" />
 	</salesforce:sfdc-config>
 	<flow name="WebSocketListener" doc:id="c3f77be4-9c11-4f0f-987d-4a4922cd872d">
 		<websocket:inbound-listener doc:name="On New Inbound Message" doc:id="224dda51-7699-43c2-abd4-67501f13ef00" path="/wsdata" config-ref="LocalServer"/>
@@ -56,22 +59,34 @@ output application/json
 	<flow name="BroadcastWebSocket" doc:id="2a9bf7c6-078f-4355-aaeb-544bfe91d65f" >
 		<websocket:outbound-listener doc:name="On New Outbound Message" doc:id="ca2f4417-eceb-42f3-ae94-663cf2c2cd1b" config-ref="LocalClient" path="/binance" />
 		<logger level="INFO" doc:name="LogWSPayload" doc:id="b93c3420-4608-4f9e-9be3-313314eeebb9" message="#[payload]" />
-		<set-variable value='#[payload]' doc:name="Set Variable" doc:id="0a3603c9-c1c7-477e-b034-9f6723a21195" variableName="message" mimeType="text/plain"/>
-		<ee:transform doc:name="Transform Message" doc:id="87e9c82d-044b-4cf7-90c6-ad815f604002" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/java
+		<scatter-gather doc:name="Scatter-Gather" doc:id="3bbedf1b-2341-4806-8cfa-9218cb37fa66" maxConcurrency="2" target="2">
+			<route >
+				<websocket:broadcast doc:name="Publish Data" doc:id="c5e99c2e-ba82-4f55-bef5-d8c50963894f" config-ref="LocalServer" path="/ws/wsdata" socketType="INBOUND" />
+			</route>
+			<route >
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="af1768e4-96ca-4335-99e7-ce96271bf5ca" mimeType="text/json"/>
+				<ee:transform doc:name="Transform Message" doc:id="49d34ef8-9ddc-444f-a51c-4abc7436fa35" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[output application/java
 ---
 [{
-	"payload": vars.message,
-	"userIds": []
+	base__c: payload.base,
+	quote__c: payload.quote,
+	direction__c: payload.direction,
+	price__c: payload.price,
+	priceusd__c: payload.priceUsd,
+	volume__c: payload.volume
 }]]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<salesforce:push-generic-event doc:name="Push generic event" doc:id="b0784b7c-7f38-4d1c-916c-da99ec6eb21c" config-ref="Salesforce_Config" channelId="0M62x000000TXPw">
-		</salesforce:push-generic-event>
-		<websocket:broadcast doc:name="Publish Data" doc:id="c5e99c2e-ba82-4f55-bef5-d8c50963894f" config-ref="LocalServer" path="/ws/wsdata" socketType="INBOUND" />
-		<logger level="INFO" doc:name="Event Copy To Platform " doc:id="ec1ceb46-9f8c-4d81-b897-37b4a97bcb95" message="#[payload]"/>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="c5062ba3-fc0f-4962-b366-364a2fbd7a04" message="#[payload]" />
+				<salesforce:publish-platform-event-message doc:name="Publish platform event message" doc:id="033514c7-187f-4f89-bae1-e9daa612a935" config-ref="Salesforce_Config" platformEventName="Crypto__e">
+					<salesforce:platform-event-messages><![CDATA[#[output application/json
+---
+payload]]]></salesforce:platform-event-messages>
+				</salesforce:publish-platform-event-message>
+			</route>
+		</scatter-gather>
 	</flow>
 	
 </mule>

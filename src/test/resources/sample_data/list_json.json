@@ -1,0 +1,10 @@
+{
+  "exchange": "binance",
+  "base": "tellor",
+  "quote": "tether",
+  "direction": "buy",
+  "price": 21.421,
+  "volume": 0.491,
+  "timestamp": 1603997248870,
+  "priceUsd": 21.4328797937687
+}

@@ -9,6 +9,24 @@
     "8f55ab52-6152-4afd-abcd-1bbbd502e724": {},
     "a2c075e6-2611-4e24-81f3-f84437f5b392": {
       "payload": "sample_data/defaultstringtype_2.dwl"
+    },
+    "e9beb724-11dd-4b5d-9ca3-17a2b3bb2cae": {
+      "payload": "sample_data/list_json.json"
+    },
+    "8957ded7-c502-4413-82f6-91c43964c39f": {
+      "payload": "sample_data/unknown.dwl"
+    },
+    "ebc2f2ab-2113-498e-a9d0-a72c029e4c55": {
+      "payload": "sample_data/list_result.dwl"
+    },
+    "6970a6d9-061c-4eb7-82f8-b074cf585e38": {
+      "payload": "sample_data/object.dwl"
+    },
+    "df5170fb-dc66-4cd0-b2f5-0d9dcd0f3f9a": {
+      "payload": "sample_data/defaultstringtype_3.dwl"
+    },
+    "033514c7-187f-4f89-bae1-e9daa612a935": {
+      "payload": "sample_data/object_1.dwl"
     }
   }
 }
