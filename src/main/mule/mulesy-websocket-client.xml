@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:json="http://www.mulesoft.org/schema/mule/json"
-	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
-	xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:aggregators="http://www.mulesoft.org/schema/mule/aggregators" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/websocket http://www.mulesoft.org/schema/mule/websocket/current/mule-websocket.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
@@ -11,7 +11,8 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd
 http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
 http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
-http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/aggregators http://www.mulesoft.org/schema/mule/aggregators/current/mule-aggregators.xsd">
 	<websocket:config name="LocalServer" doc:name="WebSockets Config" doc:id="75a0a2aa-f746-4f15-9014-1b6b8449cd86" >
 		<websocket:connection >
 			<websocket:server-settings listenerBasePath="/ws" listenerConfig="HTTP_Listener_config1" idleSocketTimeout="1" idleSocketTimeoutUnit="HOURS" />
@@ -56,30 +57,30 @@ output application/json
 		 -->
 		<logger level="INFO" doc:name="Logger" doc:id="98e588a4-c0fb-451c-91ad-6507420eb655" message="#[payload]"/>
 	</flow>
-	<flow name="BroadcastWebSocket" doc:id="2a9bf7c6-078f-4355-aaeb-544bfe91d65f" >
-		<websocket:outbound-listener doc:name="On New Outbound Message" doc:id="ca2f4417-eceb-42f3-ae94-663cf2c2cd1b" config-ref="LocalClient" path="/binance" />
-		<logger level="INFO" doc:name="LogWSPayload" doc:id="b93c3420-4608-4f9e-9be3-313314eeebb9" message="#[payload]" />
+	<flow name="mulesy-websocket-clientFlow" doc:id="9eba74aa-2c81-4463-a211-efe20dd09231" >
+		<aggregators:aggregator-listener doc:name="Aggregator listener" doc:id="fc51679a-5a03-441d-abe2-f2d6b3e89c89" aggregatorName="tickeraggregator" includeTimedOutGroups="true"/>
 		<scatter-gather doc:name="Scatter-Gather" doc:id="3bbedf1b-2341-4806-8cfa-9218cb37fa66" maxConcurrency="2" target="2">
-			<route >
-				<websocket:broadcast doc:name="Publish Data" doc:id="c5e99c2e-ba82-4f55-bef5-d8c50963894f" config-ref="LocalServer" path="/ws/wsdata" socketType="INBOUND" />
+			<route>
+				<websocket:broadcast doc:name="Publish Data" doc:id="c5e99c2e-ba82-4f55-bef5-d8c50963894f" config-ref="LocalServer" path="/ws/wsdata" socketType="INBOUND" >
+					<websocket:content ><![CDATA[#[payload[0]]]]></websocket:content>
+				</websocket:broadcast>
 			</route>
-			<route >
-				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="af1768e4-96ca-4335-99e7-ce96271bf5ca" mimeType="text/json"/>
-				<ee:transform doc:name="Transform Message" doc:id="49d34ef8-9ddc-444f-a51c-4abc7436fa35" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[output application/java
+			<route>
+				<ee:transform doc:name="Transform Message" doc:id="49d34ef8-9ddc-444f-a51c-4abc7436fa35">
+					<ee:message>
+						<ee:set-payload><![CDATA[output application/java
 ---
 [{
-	base__c: payload.base,
-	quote__c: payload.quote,
-	direction__c: payload.direction,
-	price__c: payload.price,
-	priceusd__c: payload.priceUsd,
-	volume__c: payload.volume
+	base__c: payload[0].base,
+	quote__c: payload[0].quote,
+	direction__c: payload[0].direction,
+	price__c: payload[0].price,
+	priceusd__c: payload[0].priceUsd,
+	volume__c: payload[0].volume
 }]]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
-				<logger level="INFO" doc:name="Logger" doc:id="c5062ba3-fc0f-4962-b366-364a2fbd7a04" message="#[payload]" />
+				<logger level="INFO" doc:name="Logger" doc:id="c5062ba3-fc0f-4962-b366-364a2fbd7a04" message="***** MESSAGE TO PUBLISHED #[payload]" />
 				<salesforce:publish-platform-event-message doc:name="Publish platform event message" doc:id="033514c7-187f-4f89-bae1-e9daa612a935" config-ref="Salesforce_Config" platformEventName="Crypto__e">
 					<salesforce:platform-event-messages><![CDATA[#[output application/json
 ---
@@ -87,6 +88,26 @@ payload]]]></salesforce:platform-event-messages>
 				</salesforce:publish-platform-event-message>
 			</route>
 		</scatter-gather>
+	</flow>
+	<flow name="BroadcastWebSocket" doc:id="2a9bf7c6-078f-4355-aaeb-544bfe91d65f" >
+		<websocket:outbound-listener doc:name="On New Outbound Message" doc:id="ca2f4417-eceb-42f3-ae94-663cf2c2cd1b" config-ref="LocalClient" path="/binance" />
+		<logger level="INFO" doc:name="LogWSPayload" doc:id="b93c3420-4608-4f9e-9be3-313314eeebb9" message="#[payload]" />
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="81adb0cc-5009-440f-b460-9f1382bfcbeb" mimeType="text/json"/>
+		<ee:transform doc:name="Transform Message" doc:id="00331263-c89e-4632-8261-554d27f44fb7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+--- payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<aggregators:group-based-aggregator doc:name="Group based aggregator" doc:id="9b206135-3fce-49ee-b80f-2bca4210a841" name="tickeraggregator" groupId="#[payload.base ++ payload.quote]" groupSize="100" evictionTime="10">
+			<aggregators:incremental-aggregation >
+				<logger level="INFO" doc:name="Logger" doc:id="e8c1753a-59ba-45d7-9a33-46718aff0d9e" message="***** MESSAGES BEING GROUPED #[payload]"/>
+			</aggregators:incremental-aggregation>
+			<aggregators:aggregation-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="d01d6bd4-9fd0-481c-893d-6f668ce7d208" message="***** MESSAGE AGGREGATED #[payload[0]]"/>
+			</aggregators:aggregation-complete>
+		</aggregators:group-based-aggregator>
 	</flow>
 	
 </mule>
