@@ -20,7 +20,7 @@ http://www.mulesoft.org/schema/mule/aggregators http://www.mulesoft.org/schema/m
 		</websocket:connection>
 	</websocket:config>
 	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="dc77d4f3-f24e-4b11-9eaa-acfc24b8e109" >
-		<http:listener-connection host="0.0.0.0" port="80" />
+		<http:listener-connection host="0.0.0.0" port="8082" />
 	</http:listener-config>
 	<os:object-store name="Object_store" doc:name="Object store" doc:id="e315b2e8-9ad1-41c5-a2c1-390dd7b77847" />
 	<websocket:config name="LocalClient" doc:name="WebSockets Config" doc:id="e7a08026-058e-41d1-9d57-4c65dbdf9046" >
@@ -32,9 +32,9 @@ http://www.mulesoft.org/schema/mule/aggregators http://www.mulesoft.org/schema/m
 		</websocket:connection>
 	</websocket:config>
 	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="fc297ef0-d429-4063-874b-a76f271458e7" >
-		<salesforce:basic-connection username="${sf.username}" password="demo@1908" securityToken="mVbe5uloB7A6MqmP1YAi5nrN" />
+		<salesforce:basic-connection username="${sf.username}" password="${sf.pwd}" securityToken="${sf.token}" />
 	</salesforce:sfdc-config>
-	<configuration-properties doc:name="Configuration properties" doc:id="54e1b483-19e7-44f3-b42d-83075c1ba4d0" file="mulesy-websocket.properties" />
+	<configuration-properties doc:name="Configuration properties" doc:id="54e1b483-19e7-44f3-b42d-83075c1ba4d0" file="app.properties" />
 	<flow name="WebSocketListener" doc:id="c3f77be4-9c11-4f0f-987d-4a4922cd872d">
 		<websocket:inbound-listener doc:name="On New Inbound Message" doc:id="224dda51-7699-43c2-abd4-67501f13ef00" path="/wsdata" config-ref="LocalServer"/>
 		<logger level="INFO" doc:name="Streaming Data" doc:id="4866ceaf-9925-4c9e-949e-291151e16269" message="---- streaming data ----"/>
@@ -58,10 +58,19 @@ output application/json
 		 -->
 		<logger level="INFO" doc:name="Logger" doc:id="98e588a4-c0fb-451c-91ad-6507420eb655" message="#[payload]"/>
 	</flow>
-	<flow name="mulesy-websocket-clientFlow" doc:id="9eba74aa-2c81-4463-a211-efe20dd09231" >
+	<flow name="websocket-publisher-flow" doc:id="9eba74aa-2c81-4463-a211-efe20dd09231" >
 		<aggregators:aggregator-listener doc:name="Aggregator listener" doc:id="fc51679a-5a03-441d-abe2-f2d6b3e89c89" aggregatorName="tickeraggregator" includeTimedOutGroups="true"/>
 		<scatter-gather doc:name="Scatter-Gather" doc:id="3bbedf1b-2341-4806-8cfa-9218cb37fa66" maxConcurrency="2" target="2">
 			<route>
+				<logger level="INFO" doc:name="Logger" doc:id="fd1e744d-413a-4591-a31a-6818f9cb6673" message="***** MESSAGE TO BROADCAST #[payload[0]]"/>
+				<ee:transform doc:name="Transform Message" doc:id="ea8ae2a3-717b-492f-8cb9-63270dd594a2" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
 				<websocket:broadcast doc:name="Publish Data" doc:id="c5e99c2e-ba82-4f55-bef5-d8c50963894f" config-ref="LocalServer" path="/ws/wsdata" socketType="INBOUND" >
 					<websocket:content ><![CDATA[#[payload[0]]]]></websocket:content>
 				</websocket:broadcast>
@@ -81,7 +90,7 @@ output application/json
 }]]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
-				<logger level="INFO" doc:name="Logger" doc:id="c5062ba3-fc0f-4962-b366-364a2fbd7a04" message="***** MESSAGE TO PUBLISHED #[payload]" />
+				<logger level="INFO" doc:name="Logger" doc:id="c5062ba3-fc0f-4962-b366-364a2fbd7a04" message="***** EVENTS TO PUBLISHED #[payload]" />
 				<salesforce:publish-platform-event-message doc:name="Publish platform event message" doc:id="033514c7-187f-4f89-bae1-e9daa612a935" config-ref="Salesforce_Config" platformEventName="Crypto__e">
 					<salesforce:platform-event-messages><![CDATA[#[output application/json
 ---
@@ -101,7 +110,7 @@ output application/java
 --- payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<aggregators:group-based-aggregator doc:name="Group based aggregator" doc:id="9b206135-3fce-49ee-b80f-2bca4210a841" name="tickeraggregator" groupId="#[payload.base ++ payload.quote]" groupSize="50" evictionTime="10">
+		<aggregators:group-based-aggregator doc:name="Group based aggregator" doc:id="9b206135-3fce-49ee-b80f-2bca4210a841" name="tickeraggregator" groupId="#[payload.base ++ payload.quote]" groupSize="50" evictionTime="0" timeout="10">
 			<aggregators:incremental-aggregation >
 				<logger level="INFO" doc:name="Logger" doc:id="e8c1753a-59ba-45d7-9a33-46718aff0d9e" message="***** MESSAGES BEING GROUPED #[payload]"/>
 			</aggregators:incremental-aggregation>
