@@ -110,7 +110,7 @@ output application/java
 --- payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<aggregators:group-based-aggregator doc:name="Group based aggregator" doc:id="9b206135-3fce-49ee-b80f-2bca4210a841" name="tickeraggregator" groupId="#[payload.base ++ payload.quote]" groupSize="50" evictionTime="0" timeout="10">
+		<aggregators:group-based-aggregator doc:name="Group based aggregator" doc:id="9b206135-3fce-49ee-b80f-2bca4210a841" name="tickeraggregator" groupId="#[payload.base ++ payload.quote]" groupSize="50" evictionTime="0" timeout="60">
 			<aggregators:incremental-aggregation >
 				<logger level="INFO" doc:name="Logger" doc:id="e8c1753a-59ba-45d7-9a33-46718aff0d9e" message="***** MESSAGES BEING GROUPED #[payload]"/>
 			</aggregators:incremental-aggregation>
